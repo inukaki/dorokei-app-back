@@ -1,0 +1,16 @@
+name: dorokei-database
+services:
+  db:
+    container_name: dorokei-mariadb
+    image: mariadb:10.11.2
+    env_file: ../.env
+    environment:
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped 
+
+volumes:
+  db_data:
