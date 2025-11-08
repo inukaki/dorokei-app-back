@@ -14,7 +14,7 @@ import { AppService } from './app.service';
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get('DB_PORT', 3306),
+        port: parseInt(configService.get('DB_PORT', '3306'), 10),
         username: configService.get('MYSQL_USER'),
         password: configService.get('MYSQL_PASSWORD'),
         database: configService.get('MYSQL_DATABASE'),
