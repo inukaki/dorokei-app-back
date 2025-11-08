@@ -14,7 +14,7 @@ services:
       - "${DB_PORT:-3306}:3306"
     volumes:
       - db_data:/var/lib/mysql
-    restart: unless-stopped 
+    restart: unless-stopped
 
 volumes:
   db_data:
