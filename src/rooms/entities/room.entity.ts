@@ -27,7 +27,7 @@ export class Room {
     @Column({ type: 'datetime', nullable: true })
     startedAt: Date | null;
 
-    @Column({ type: 'varchar', length: 36})
+    @Column({ type: 'varchar', length: 36 })
     hostPlayerId: string;
 
     // 最大参加人数のデフォルト値を15に設定
