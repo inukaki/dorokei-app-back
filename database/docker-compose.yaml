@@ -2,7 +2,7 @@ name: dorokei-database
 services:
   db:
     container_name: dorokei-mariadb
-    image: mariadb:10.11.2
+    image: mariadb:10.11.10
     env_file: ../.env
     environment:
       TZ: Asia/Tokyo
