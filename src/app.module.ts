@@ -20,7 +20,8 @@ import e from 'express';
         password: configService.get('MYSQL_PASSWORD'),
         database: configService.get('MYSQL_DATABASE'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        // WARNING: synchronize設定は本番環境ではfalseにすること
+        synchronize: configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
       }),
       inject: [ConfigService],
     }),
