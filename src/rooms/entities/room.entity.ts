@@ -39,12 +39,12 @@ export class Room {
     players: Player[];
 
     // CreateDateColumnではデフォルトで
-    // DBに制度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
+    // DBに精度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
     @CreateDateColumn()
     createdAt: Date;
 
     // UpdateDateColumnではデフォルトで
-    // DBに制度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
+    // DBに精度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
     @UpdateDateColumn()
     updatedAt: Date;
 }
