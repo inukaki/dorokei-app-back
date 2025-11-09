@@ -25,7 +25,7 @@ cd dorokei-app-back
 #### 2. 環境変数ファイルをコピー
 
 ```bash
-cp .env.example .env
+cp .env.template .env
 ```
 
 💡 `.env`ファイルの内容は適切に編集する必要があります
@@ -95,7 +95,7 @@ docker exec -it dorokei-mariadb mariadb -u root -p -e "USE dorokei_db; SHOW TABL
 ```bash
 # MariaDBに接続（root）
 docker exec -it dorokei-mariadb mariadb -u root -p
-# パスワード: .envファイルで設定した`DB_ROOT_PASSWORD`を入力
+# パスワード: .envファイルで設定した`MYSQL_ROOT_PASSWORD`を入力
 ```
 
 **SQL実行例:**
