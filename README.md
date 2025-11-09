@@ -18,7 +18,7 @@ NestJS + TypeORM + MariaDB で構築されたドロケイゲームのバック�
 #### 1. リポジトリをクローン
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/inukaki/dorokei-app-back.git>
 cd dorokei-app-back
 ```
 
@@ -28,7 +28,7 @@ cd dorokei-app-back
 cp .env.example .env
 ```
 
-💡 `.env`ファイルの内容は必要に応じて編集してください（通常はデフォルトで動作します）
+💡 `.env`ファイルの内容は適切に編集する必要があります
 
 #### 3. Docker Composeで起動
 
