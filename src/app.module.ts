@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { RoomsModule } from './rooms/rooms.module';
-import { PlayersModule } from './players/players.module';
+import { RoomsModule } from './modules/rooms/rooms.module';
+import { PlayersModule } from './modules/players/players.module';
 import { typeOrmConfig } from 'typeorm.config';
 
 @Module({
@@ -16,7 +14,7 @@ import { typeOrmConfig } from 'typeorm.config';
     RoomsModule,
     PlayersModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

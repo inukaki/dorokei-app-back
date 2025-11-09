@@ -16,8 +16,8 @@ export const typeOrmConfig: DataSourceOptions = {
     synchronize: isDevelopment && synchronizeEnabled,
     logging: isDevelopment ? ['query', 'error'] : false,
     entities: isDevelopment
-        ? [__dirname + '/src/**/*.entity.ts']  // 開発環境
-        : [__dirname + '/dist/**/*.entity.js'], // 本番環境
+        ? [__dirname + '/src/modules/**/*.entity.ts']  // 開発環境
+        : [__dirname + '/dist/modules/**/*.entity.js'], // 本番環境
     migrations: isDevelopment
         ? [__dirname + '/src/migrations/**/*{.ts,.js}']  // 開発環境
         : [__dirname + '/dist/migrations/**/*{.ts,.js}'], // 本番環境
