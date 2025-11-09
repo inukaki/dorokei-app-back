@@ -76,7 +76,7 @@ dorokei-mariadb     mariadb:10.11.10         Up 2 minutes              0.0.0.0:3
 docker exec -it dorokei-mariadb mariadb -u root -p -e "USE dorokei_db; SHOW TABLES;"
 ```
 
-パスワード: .envファイルで設定した`DB_ROOT_PASSWORD`を入力
+パスワード: .envファイルで設定した`MYSQL_ROOT_PASSWORD`を入力
 
 
 **期待される出力:**
