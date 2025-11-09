@@ -18,17 +18,17 @@ NestJS + TypeORM + MariaDB で構築されたドロケイゲームのバック�
 #### 1. リポジトリをクローン
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/inukaki/dorokei-app-back.git>
 cd dorokei-app-back
 ```
 
 #### 2. 環境変数ファイルをコピー
 
 ```bash
-cp .env.example .env
+cp .env.template .env
 ```
 
-💡 `.env`ファイルの内容は必要に応じて編集してください（通常はデフォルトで動作します）
+💡 `.env`ファイルの内容は適切に編集する必要があります
 
 #### 3. Docker Composeで起動
 
@@ -95,7 +95,7 @@ docker exec -it dorokei-mariadb mariadb -u root -p -e "USE dorokei_db; SHOW TABL
 ```bash
 # MariaDBに接続（root）
 docker exec -it dorokei-mariadb mariadb -u root -p
-# パスワード: .envファイルで設定した`DB_ROOT_PASSWORD`を入力
+# パスワード: .envファイルで設定した`MYSQL_ROOT_PASSWORD`を入力
 ```
 
 **SQL実行例:**
