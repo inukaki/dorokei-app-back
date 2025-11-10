@@ -11,9 +11,6 @@ export class Player {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 255, unique: true })
-    playerToken: string;
-
     @Column({ type: 'varchar', length: 100 })
     playerName: string;
 
