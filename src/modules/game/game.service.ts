@@ -42,7 +42,7 @@ export class GameService {
       );
 
       room.hostPlayerId = hostPlayer.id;
-      await this.roomsService.updateStatus(room.id, room.status);
+      await this.roomsService.update(room.id, { hostPlayerId: hostPlayer.id });
 
       const playerToken = this.jwtService.sign({
         playerId: hostPlayer.id,
