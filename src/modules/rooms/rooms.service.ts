@@ -57,11 +57,13 @@ export class RoomsService {
     return this.roomRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} room`;
-  }
-
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
+  // 部屋の情報を更新
+  async update(id: string, updateData: Partial<Room>): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new Error('部屋が見つかりません');
+    }
+    Object.assign(room, updateData);
+    return this.roomRepository.save(room);
   }
 }
