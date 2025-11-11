@@ -1,15 +1,21 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { GameService } from './game.service';
-import { CreateGameDto } from './dto/create-game.dto';
+import { CreateRoomDto } from '../rooms/dto/create-room.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
+import { JoinRoomDto } from '../rooms/dto/join-room.dto';
 
-@Controller('game')
+@Controller('rooms')
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
+  @Post('join')
+  joinRoom(@Body() joinRoomDto: JoinRoomDto) {
+    return this.gameService.joinRoom(joinRoomDto);
+  }
+
   @Post()
-  create(@Body() createGameDto: CreateGameDto) {
-    return this.gameService.create(createGameDto);
+  createRoom(@Body() createRoomDto: CreateRoomDto) {
+    return this.gameService.createRoomWithHost(createRoomDto);
   }
 
   @Get()
