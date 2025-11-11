@@ -53,8 +53,8 @@ export class RoomsService {
     await this.roomRepository.delete(id);
   }
 
-  findAll() {
-    return `This action returns all rooms`;
+  findAll(): Promise<Room[]> {
+    return this.roomRepository.find();
   }
 
   findOne(id: number) {

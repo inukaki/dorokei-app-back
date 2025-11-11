@@ -28,6 +28,10 @@ export class PlayersService {
     return this.playerRepository.save(player);
   }
 
+  async findByRoomId(roomId: string): Promise<Player[]> {
+    return this.playerRepository.find({ where: { roomId } });
+  }
+
   findAll() {
     return `This action returns all players`;
   }
