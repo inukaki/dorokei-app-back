@@ -41,8 +41,8 @@ export class GameService {
         PlayerRole.POLICE
       );
 
-      room.hostPlayerId = hostPlayer.id;
-      await this.roomsService.update(room.id, { hostPlayerId: hostPlayer.id });
+      // ホストプレイヤーIDを設定して部屋の情報を更新
+      await this.roomsService.updateHostPlayerId(room.id, hostPlayer.id);
 
       const playerToken = this.jwtService.sign({
         playerId: hostPlayer.id,

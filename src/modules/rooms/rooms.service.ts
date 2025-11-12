@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -42,7 +42,7 @@ export class RoomsService {
   async updateStatus(id: string, status: RoomStatus): Promise<Room> {
     const room = await this.findById(id);
     if (!room) {
-      throw new Error('部屋が見つかりません');
+      throw new NotFoundException('部屋が見つかりません');
     }
     room.status = status;
     return this.roomRepository.save(room);
@@ -57,11 +57,37 @@ export class RoomsService {
     return this.roomRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} room`;
+  // 部屋の情報を更新
+  async update(id: string, updateRoomDto: UpdateRoomDto): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+    
+    // DTOで定義されたフィールドのみを更新
+    if (updateRoomDto.durationSeconds !== undefined) {
+      room.durationSeconds = updateRoomDto.durationSeconds;
+    }
+    if (updateRoomDto.gracePeriodSeconds !== undefined) {
+      room.gracePeriodSeconds = updateRoomDto.gracePeriodSeconds;
+    }
+    if (updateRoomDto.maxPlayers !== undefined) {
+      room.maxPlayers = updateRoomDto.maxPlayers;
+    }
+    if (updateRoomDto.status !== undefined) {
+      room.status = updateRoomDto.status;
+    }
+    
+    return this.roomRepository.save(room);
   }
 
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
+  // 内部用: ホストプレイヤーIDを更新（GameServiceから使用）
+  async updateHostPlayerId(id: string, hostPlayerId: string): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+    room.hostPlayerId = hostPlayerId;
+    return this.roomRepository.save(room);
   }
 }
