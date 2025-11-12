@@ -13,28 +13,8 @@ export class GameController {
     return this.gameService.joinRoom(joinRoomDto);
   }
 
-  @Post()
+  @Post('create')
   createRoom(@Body() createRoomDto: CreateRoomDto) {
     return this.gameService.createRoomWithHost(createRoomDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.gameService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gameService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGameDto: UpdateGameDto) {
-    return this.gameService.update(+id, updateGameDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.gameService.remove(+id);
   }
 }

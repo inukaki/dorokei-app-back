@@ -3,6 +3,7 @@ import { Player } from "../../players/entities/player.entity";
 
 export enum RoomStatus {
   WAITING = 'WAITING',
+  CLOSED = 'CLOSED',
   IN_GAME = 'IN_GAME',
   FINISHED = 'FINISHED',
 }

@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateRoomDto } from './dto/create-room.dto';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -88,6 +87,53 @@ export class RoomsService {
       throw new NotFoundException('部屋が見つかりません');
     }
     room.hostPlayerId = hostPlayerId;
+    return this.roomRepository.save(room);
+  }
+
+  // ゲームを開始
+  async startGame(id: string): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+    room.status = RoomStatus.IN_GAME;
+    room.startedAt = new Date();
+    return this.roomRepository.save(room);
+  }
+
+  // ゲームを強制終了
+  async terminateGame(id: string): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+    room.status = RoomStatus.FINISHED;
+    return this.roomRepository.save(room);
+  }
+
+  // 参加受付を終了
+  async closeEntry(id: string): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+    room.status = RoomStatus.CLOSED;
+    return this.roomRepository.save(room);
+  }
+
+  // ロビーに戻る（リセット）
+  async resetToLobby(id: string): Promise<Room> {
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException('部屋が見つかりません');
+    }
+
+    if (room.status !== RoomStatus.FINISHED) {
+      throw new BadRequestException('ゲームが終了していません');
+    }
+
+    room.status = RoomStatus.WAITING;
+    room.startedAt = null;
     return this.roomRepository.save(room);
   }
 }
