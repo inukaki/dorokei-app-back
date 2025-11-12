@@ -33,7 +33,7 @@ export class RoomAuthGuard implements CanActivate {
     let payload: any;
     try {
       payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET || 'your-secret-key',
+        secret: process.env.JWT_SECRET || 'dorokei-secret-key',
       });
     } catch (error) {
       throw new UnauthorizedException('無効な認証トークンです');

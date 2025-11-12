@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
@@ -17,6 +16,7 @@ import { UpdatePlayerDto } from './dto/update-player.dto';
 import { RoomAuthGuard } from '../../guards';
 import { CurrentUser } from '../../decorators';
 import { JwtPayload } from '../../types/express';
+import { PlayerRole } from './entities/player.entity';
 
 @Controller('rooms/players')
 export class PlayersController {
@@ -32,7 +32,7 @@ export class PlayersController {
   ) {
     // 捕獲を実行するプレイヤーが警察であることを確認
     const executor = await this.playersService.findById(user.playerId);
-    if (!executor || executor.role !== 'POLICE') {
+    if (!executor || executor.role !== PlayerRole.POLICE) {
       throw new BadRequestException('警察のみが捕獲できます');
     }
 

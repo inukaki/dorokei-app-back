@@ -25,7 +25,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET || 'your-secret-key',
+        secret: process.env.JWT_SECRET || 'dorokei-secret-key',
       });
 
       // リクエストオブジェクトにユーザー情報を追加

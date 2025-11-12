@@ -4,17 +4,13 @@ import {
   Post,
   Body,
   Patch,
-  Param,
-  Delete,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { PlayersService } from '../players/players.service';
-import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { RoomStatusDto } from './dto/room-status.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { RoomActionDto } from './dto/room-action.dto';
 import { RoomAuthGuard, HostGuard } from '../../guards';
