@@ -103,7 +103,6 @@ export class RoomsController {
   @HttpCode(HttpStatus.OK)
   async startGame(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: RoomActionDto,
   ) {
     const room = await this.roomsService.startGame(user.roomId);
 
@@ -123,7 +122,6 @@ export class RoomsController {
   @HttpCode(HttpStatus.OK)
   async terminateGame(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: RoomActionDto,
   ) {
     const room = await this.roomsService.terminateGame(user.roomId);
 
@@ -168,7 +166,6 @@ export class RoomsController {
   @HttpCode(HttpStatus.OK)
   async closeEntry(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: RoomActionDto,
   ) {
     await this.roomsService.closeEntry(user.roomId);
 
@@ -184,7 +181,6 @@ export class RoomsController {
   async resetToLobby(
     @CurrentUser() user: JwtPayload,
     @CurrentRoom() room: Room,
-    @Body() dto: RoomActionDto,
   ) {
     // プレイヤーの捕獲状態をリセット
     await this.playersService.resetCaptureStatus(room.id);
