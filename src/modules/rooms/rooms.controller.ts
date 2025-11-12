@@ -166,7 +166,7 @@ export class RoomsController {
     };
   }
 
-  // 2.6 POST /rooms/close - 参加受付を終了（ホスト専用）
+  // 2.6 POST /rooms/close - 参加受付を終了(ホスト専用)
   @Post('close')
   @UseGuards(RoomAuthGuard, HostGuard)
   @HttpCode(HttpStatus.OK)
@@ -178,6 +178,31 @@ export class RoomsController {
 
     return {
       message: '参加受付を終了しました',
+    };
+  }
+
+  // 2.7 POST /rooms/reset - ロビーに戻る（ホスト専用）
+  @Post('reset')
+  @UseGuards(RoomAuthGuard, HostGuard)
+  @HttpCode(HttpStatus.OK)
+  async resetToLobby(
+    @CurrentUser() user: JwtPayload,
+    @CurrentRoom() room: Room,
+    @Body() dto: RoomActionDto,
+  ) {
+    // プレイヤーの捕獲状態をリセット
+    await this.playersService.resetCaptureStatus(room.id);
+    
+    // 部屋の状態をロビーに戻す
+    const resetRoom = await this.roomsService.resetToLobby(room.id);
+
+    return {
+      message: 'ロビーに戻りました',
+      room: {
+        id: resetRoom.id,
+        status: resetRoom.status,
+        startedAt: resetRoom.startedAt,
+      },
     };
   }
 }

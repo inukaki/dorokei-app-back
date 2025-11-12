@@ -75,6 +75,14 @@ export class PlayersService {
     return this.playerRepository.save(player);
   }
 
+  // 部屋のプレイヤーの捕獲状態をリセット
+  async resetCaptureStatus(roomId: string): Promise<void> {
+    await this.playerRepository.update(
+      { roomId, role: PlayerRole.THIEF },
+      { isCaptured: false },
+    );
+  }
+
   findAll() {
     return `This action returns all players`;
   }
