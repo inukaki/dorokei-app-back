@@ -11,6 +11,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PlayersService } from './players.service';
+import { RoomsService } from '../rooms/rooms.service';
+import { GameGateway } from '../game/game.gateway';
+import { GameTerminationReason } from '../game/dto/game-termination-reason.dto';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { RoomAuthGuard } from '../../guards';
@@ -20,7 +23,11 @@ import { PlayerRole } from './entities/player.entity';
 
 @Controller('rooms/players')
 export class PlayersController {
-  constructor(private readonly playersService: PlayersService) {}
+  constructor(
+    private readonly playersService: PlayersService,
+    private readonly roomsService: RoomsService,
+    private readonly gameGateway: GameGateway,
+  ) {}
 
   // 3.1 PATCH /rooms/players/:playerId/capture - プレイヤーを捕獲
   @Patch(':playerId/capture')
@@ -37,6 +44,25 @@ export class PlayersController {
     }
 
     await this.playersService.capturePlayer(playerId);
+
+    // WebSocketで捕獲通知を送信
+    await this.gameGateway.sendPlayerCaptured(user.roomId, playerId);
+
+    // 全員捕まったかチェック
+    const allCaptured = await this.playersService.areAllThievesCaptured(user.roomId);
+    if (allCaptured) {
+      // タイマーを停止
+      this.gameGateway.stopGameTimer(user.roomId);
+      
+      // ゲームを終了
+      await this.roomsService.terminateGame(user.roomId);
+      
+      // ゲーム終了通知を送信
+      await this.gameGateway.sendGameTerminated(user.roomId, GameTerminationReason.ALL_CAPTURED);
+    }
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
 
     return {
       message: 'プレイヤーを捕獲しました',
@@ -59,6 +85,12 @@ export class PlayersController {
 
     await this.playersService.releasePlayer(playerId);
 
+    // WebSocketで解放通知を送信
+    await this.gameGateway.sendPlayerReleased(user.roomId, playerId);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
+
     return {
       message: 'プレイヤーを解放しました',
     };
@@ -69,18 +101,4 @@ export class PlayersController {
     return this.playersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.playersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
-    return this.playersService.update(+id, updatePlayerDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.playersService.remove(+id);
-  }
 }

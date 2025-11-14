@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { PlayersService } from '../players/players.service';
+import { GameGateway } from '../game/game.gateway';
+import { GameTerminationReason } from '../game/dto/game-termination-reason.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { RoomActionDto } from './dto/room-action.dto';
@@ -23,6 +25,7 @@ export class RoomsController {
   constructor(
     private readonly roomsService: RoomsService,
     private readonly playersService: PlayersService,
+    private readonly gameGateway: GameGateway,
   ) {}
 
   @Get()
@@ -86,6 +89,9 @@ export class RoomsController {
 
     const updatedRoom = await this.roomsService.update(user.roomId, updateData);
 
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
+
     return {
       message: '設定を更新しました',
       room: {
@@ -106,6 +112,12 @@ export class RoomsController {
   ) {
     const room = await this.roomsService.startGame(user.roomId);
 
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
+
+    // タイマーを開始
+    await this.gameGateway.startGameTimer(user.roomId);
+
     return {
       message: 'ゲームを開始しました',
       room: {
@@ -124,6 +136,15 @@ export class RoomsController {
     @CurrentUser() user: JwtPayload,
   ) {
     const room = await this.roomsService.terminateGame(user.roomId);
+
+    // タイマーを停止
+    this.gameGateway.stopGameTimer(user.roomId);
+
+    // WebSocketでゲーム終了通知を送信
+    await this.gameGateway.sendGameTerminated(user.roomId, GameTerminationReason.TERMINATED_BY_HOST);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
 
     return {
       message: 'ゲームを終了しました',
@@ -169,6 +190,9 @@ export class RoomsController {
   ) {
     await this.roomsService.closeEntry(user.roomId);
 
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
+
     return {
       message: '参加受付を終了しました',
     };
@@ -182,11 +206,17 @@ export class RoomsController {
     @CurrentUser() user: JwtPayload,
     @CurrentRoom() room: Room,
   ) {
+    // タイマーを停止（念のため）
+    this.gameGateway.stopGameTimer(room.id);
+
     // プレイヤーの捕獲状態をリセット
     await this.playersService.resetCaptureStatus(room.id);
     
     // 部屋の状態をロビーに戻す
     const resetRoom = await this.roomsService.resetToLobby(room.id);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(room.id);
 
     return {
       message: 'ロビーに戻りました',

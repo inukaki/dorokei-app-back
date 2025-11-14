@@ -82,11 +82,41 @@ export class PlayersService {
     );
   }
 
+  // 泥棒が全員捕まっているかチェック
+  async areAllThievesCaptured(roomId: string): Promise<boolean> {
+    const thieves = await this.playerRepository.find({
+      where: { roomId, role: PlayerRole.THIEF },
+    });
+
+    // 泥棒が1人もいない場合はfalse
+    if (thieves.length === 0) {
+      return false;
+    }
+
+    // 全ての泥棒が捕まっているかチェック
+    return thieves.every(thief => thief.isCaptured);
+  }
+
+  // プレイヤーの接続状態を更新
+  async updateConnectionStatus(id: string, isConnected: boolean): Promise<Player> {
+    const player = await this.findById(id);
+    if (!player) {
+      throw new NotFoundException(`プレイヤーが見つかりません`);
+    }
+
+    player.isConnected = isConnected;
+    return this.playerRepository.save(player);
+  }
+
   findAll() {
     return `This action returns all players`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
+    return this.findById(id);
+  }
+
+  findOneOld(id: number) {
     return `This action returns a #${id} player`;
   }
 
