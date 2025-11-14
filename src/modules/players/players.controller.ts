@@ -11,6 +11,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PlayersService } from './players.service';
+import { GameGateway } from '../game/game.gateway';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { RoomAuthGuard } from '../../guards';
@@ -20,7 +21,10 @@ import { PlayerRole } from './entities/player.entity';
 
 @Controller('rooms/players')
 export class PlayersController {
-  constructor(private readonly playersService: PlayersService) {}
+  constructor(
+    private readonly playersService: PlayersService,
+    private readonly gameGateway: GameGateway,
+  ) {}
 
   // 3.1 PATCH /rooms/players/:playerId/capture - プレイヤーを捕獲
   @Patch(':playerId/capture')
@@ -37,6 +41,9 @@ export class PlayersController {
     }
 
     await this.playersService.capturePlayer(playerId);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
 
     return {
       message: 'プレイヤーを捕獲しました',
@@ -58,6 +65,9 @@ export class PlayersController {
     }
 
     await this.playersService.releasePlayer(playerId);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(user.roomId);
 
     return {
       message: 'プレイヤーを解放しました',

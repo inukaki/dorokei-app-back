@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { GameService } from './game.service';
 import { GameController } from './game.controller';
 import { GameGateway } from './game.gateway';
@@ -10,8 +10,8 @@ import { WsAuthGuard, WsRoomAuthGuard } from '../../guards';
 
 @Module({
   imports: [
-    RoomsModule,
-    PlayersModule,
+    forwardRef(() => RoomsModule),
+    forwardRef(() => PlayersModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

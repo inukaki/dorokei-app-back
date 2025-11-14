@@ -5,12 +5,14 @@ import { RoomsController } from './rooms.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';  
 import { Room } from './entities/room.entity';
 import { PlayersModule } from '../players/players.module';
+import { GameModule } from '../game/game.module';
 import { AuthGuard, RoomAuthGuard, HostGuard } from '../../guards';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Room]),
     forwardRef(() => PlayersModule),  // ← forwardRef() で循環依存を解決
+    forwardRef(() => GameModule),  // GameGatewayを使用するため
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dorokei-secret-key',
       signOptions: { expiresIn: '24h' },
