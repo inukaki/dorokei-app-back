@@ -12,6 +12,7 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { RoomsService } from '../rooms/rooms.service';
 import { PlayersService } from '../players/players.service';
 import { ReconnectDto } from './dto/reconnect.dto';
+import { GameTerminationReason } from './dto/game-termination-reason.dto';
 import { JwtPayload } from '../../types/express';
 import { WsAuthGuard, WsRoomAuthGuard } from '../../guards';
 import { WsCurrentUser, WsCurrentRoom, WsCurrentPlayer } from '../../decorators';
@@ -269,7 +270,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.roomsService.terminateGame(roomId);
     
     // ゲーム終了通知を送信
-    await this.sendGameTerminated(roomId, '時間切れ');
+    await this.sendGameTerminated(roomId, GameTerminationReason.TIME_UP);
     
     // 状態を更新
     await this.sendGameStatus(roomId);
@@ -318,12 +319,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * ゲーム終了通知を送信
    */
-  async sendGameTerminated(roomId: string, reason: string) {
+  async sendGameTerminated(roomId: string, reason: GameTerminationReason) {
     this.logger.log(`[sendGameTerminated] Sending termination notification for room ${roomId}, reason: ${reason}`);
+    
+    const reasonMessages: Record<GameTerminationReason, string> = {
+      [GameTerminationReason.TIME_UP]: '時間切れ',
+      [GameTerminationReason.ALL_CAPTURED]: '全員捕獲',
+      [GameTerminationReason.TERMINATED_BY_HOST]: 'ホストによる強制終了',
+    };
     
     this.server.to(`room:${roomId}`).emit('game:terminatedNotification', {
       reason,
-      message: `ゲームが終了しました: ${reason}`,
+      message: `ゲームが終了しました: ${reasonMessages[reason]}`,
       timestamp: new Date().toISOString(),
     });
   }

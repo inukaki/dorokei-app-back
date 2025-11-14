@@ -13,6 +13,7 @@ import {
 import { PlayersService } from './players.service';
 import { RoomsService } from '../rooms/rooms.service';
 import { GameGateway } from '../game/game.gateway';
+import { GameTerminationReason } from '../game/dto/game-termination-reason.dto';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { RoomAuthGuard } from '../../guards';
@@ -57,7 +58,7 @@ export class PlayersController {
       await this.roomsService.terminateGame(user.roomId);
       
       // ゲーム終了通知を送信
-      await this.gameGateway.sendGameTerminated(user.roomId, '全員捕獲');
+      await this.gameGateway.sendGameTerminated(user.roomId, GameTerminationReason.ALL_CAPTURED);
     }
 
     // WebSocketで状態を通知

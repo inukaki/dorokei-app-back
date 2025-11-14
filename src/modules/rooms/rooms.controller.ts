@@ -11,6 +11,7 @@ import {
 import { RoomsService } from './rooms.service';
 import { PlayersService } from '../players/players.service';
 import { GameGateway } from '../game/game.gateway';
+import { GameTerminationReason } from '../game/dto/game-termination-reason.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { RoomActionDto } from './dto/room-action.dto';
@@ -140,7 +141,7 @@ export class RoomsController {
     this.gameGateway.stopGameTimer(user.roomId);
 
     // WebSocketでゲーム終了通知を送信
-    await this.gameGateway.sendGameTerminated(user.roomId, 'ホストによる強制終了');
+    await this.gameGateway.sendGameTerminated(user.roomId, GameTerminationReason.TERMINATED_BY_HOST);
 
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);
