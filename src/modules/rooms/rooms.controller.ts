@@ -139,6 +139,9 @@ export class RoomsController {
     // タイマーを停止
     this.gameGateway.stopGameTimer(user.roomId);
 
+    // WebSocketでゲーム終了通知を送信
+    await this.gameGateway.sendGameTerminated(user.roomId, 'ホストによる強制終了');
+
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);
 

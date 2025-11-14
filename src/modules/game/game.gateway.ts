@@ -54,11 +54,23 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const playerInfo = this.socketToPlayer.get(client.id);
     if (playerInfo) {
       try {
+        // プレイヤー情報を取得
+        const player = await this.playersService.findOne(playerInfo.playerId);
+        
         // プレイヤーの接続状態を更新
         await this.playersService.updateConnectionStatus(
           playerInfo.playerId,
           false,
         );
+
+        // プレイヤー退出通知を送信
+        if (player) {
+          await this.sendPlayerLeft(
+            playerInfo.roomId,
+            playerInfo.playerId,
+            player.playerName,
+          );
+        }
 
         // ルームから退出
         client.leave(`room:${playerInfo.roomId}`);
@@ -256,7 +268,77 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // ゲームを終了
     await this.roomsService.terminateGame(roomId);
     
+    // ゲーム終了通知を送信
+    await this.sendGameTerminated(roomId, '時間切れ');
+    
     // 状態を更新
     await this.sendGameStatus(roomId);
+  }
+
+  /**
+   * プレイヤー捕獲通知を送信
+   */
+  async sendPlayerCaptured(roomId: string, playerId: string) {
+    this.logger.log(`[sendPlayerCaptured] Sending capture notification for player ${playerId} in room ${roomId}`);
+    
+    const player = await this.playersService.findOne(playerId);
+    if (!player) {
+      this.logger.warn(`[sendPlayerCaptured] Player ${playerId} not found`);
+      return;
+    }
+    
+    this.server.to(`room:${roomId}`).emit('player:capturedNotification', {
+      playerId: player.id,
+      playerName: player.playerName,
+      message: `${player.playerName}が捕まりました`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * プレイヤー解放通知を送信
+   */
+  async sendPlayerReleased(roomId: string, playerId: string) {
+    this.logger.log(`[sendPlayerReleased] Sending release notification for player ${playerId} in room ${roomId}`);
+    
+    const player = await this.playersService.findOne(playerId);
+    if (!player) {
+      this.logger.warn(`[sendPlayerReleased] Player ${playerId} not found`);
+      return;
+    }
+    
+    this.server.to(`room:${roomId}`).emit('player:releasedNotification', {
+      playerId: player.id,
+      playerName: player.playerName,
+      message: `${player.playerName}が解放されました`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * ゲーム終了通知を送信
+   */
+  async sendGameTerminated(roomId: string, reason: string) {
+    this.logger.log(`[sendGameTerminated] Sending termination notification for room ${roomId}, reason: ${reason}`);
+    
+    this.server.to(`room:${roomId}`).emit('game:terminatedNotification', {
+      reason,
+      message: `ゲームが終了しました: ${reason}`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * プレイヤー退出通知を送信
+   */
+  async sendPlayerLeft(roomId: string, playerId: string, playerName: string) {
+    this.logger.log(`[sendPlayerLeft] Sending left notification for player ${playerId} in room ${roomId}`);
+    
+    this.server.to(`room:${roomId}`).emit('player:leftNotification', {
+      playerId,
+      playerName,
+      message: `${playerName}が退出しました`,
+      timestamp: new Date().toISOString(),
+    });
   }
 }

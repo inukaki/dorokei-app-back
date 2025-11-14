@@ -11,6 +11,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PlayersService } from './players.service';
+import { RoomsService } from '../rooms/rooms.service';
 import { GameGateway } from '../game/game.gateway';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
@@ -23,6 +24,7 @@ import { PlayerRole } from './entities/player.entity';
 export class PlayersController {
   constructor(
     private readonly playersService: PlayersService,
+    private readonly roomsService: RoomsService,
     private readonly gameGateway: GameGateway,
   ) {}
 
@@ -41,6 +43,22 @@ export class PlayersController {
     }
 
     await this.playersService.capturePlayer(playerId);
+
+    // WebSocketで捕獲通知を送信
+    await this.gameGateway.sendPlayerCaptured(user.roomId, playerId);
+
+    // 全員捕まったかチェック
+    const allCaptured = await this.playersService.areAllThievesCaptured(user.roomId);
+    if (allCaptured) {
+      // タイマーを停止
+      this.gameGateway.stopGameTimer(user.roomId);
+      
+      // ゲームを終了
+      await this.roomsService.terminateGame(user.roomId);
+      
+      // ゲーム終了通知を送信
+      await this.gameGateway.sendGameTerminated(user.roomId, '全員捕獲');
+    }
 
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);
@@ -65,6 +83,9 @@ export class PlayersController {
     }
 
     await this.playersService.releasePlayer(playerId);
+
+    // WebSocketで解放通知を送信
+    await this.gameGateway.sendPlayerReleased(user.roomId, playerId);
 
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);

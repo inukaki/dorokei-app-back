@@ -134,6 +134,36 @@
                 addLog(JSON.stringify(data, null, 2), 'receive');
             });
 
+            // game:timerTick イベントを受信
+            socket.on('game:timerTick', (data) => {
+                addLog(`⏰ game:timerTick 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:capturedNotification イベントを受信
+            socket.on('player:capturedNotification', (data) => {
+                addLog(`🚨 player:capturedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:releasedNotification イベントを受信
+            socket.on('player:releasedNotification', (data) => {
+                addLog(`🆓 player:releasedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // game:terminatedNotification イベントを受信
+            socket.on('game:terminatedNotification', (data) => {
+                addLog(`🏁 game:terminatedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:leftNotification イベントを受信
+            socket.on('player:leftNotification', (data) => {
+                addLog(`👋 player:leftNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
             // エラーイベントを受信
             socket.on('error', (error) => {
                 addLog(`❌ エラー: ${JSON.stringify(error)}`, 'error');
@@ -141,7 +171,15 @@
 
             // 汎用イベントリスナー（デバッグ用）
             socket.onAny((eventName, ...args) => {
-                if (eventName !== 'game:statusUpdated') {
+                const knownEvents = [
+                    'game:statusUpdated',
+                    'game:timerTick',
+                    'player:capturedNotification',
+                    'player:releasedNotification',
+                    'game:terminatedNotification',
+                    'player:leftNotification',
+                ];
+                if (!knownEvents.includes(eventName)) {
                     addLog(`📨 ${eventName}: ${JSON.stringify(args)}`, 'receive');
                 }
             });
