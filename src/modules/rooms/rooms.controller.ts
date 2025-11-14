@@ -114,6 +114,9 @@ export class RoomsController {
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);
 
+    // タイマーを開始
+    await this.gameGateway.startGameTimer(user.roomId);
+
     return {
       message: 'ゲームを開始しました',
       room: {
@@ -132,6 +135,9 @@ export class RoomsController {
     @CurrentUser() user: JwtPayload,
   ) {
     const room = await this.roomsService.terminateGame(user.roomId);
+
+    // タイマーを停止
+    this.gameGateway.stopGameTimer(user.roomId);
 
     // WebSocketで状態を通知
     await this.gameGateway.sendGameStatus(user.roomId);
@@ -196,6 +202,9 @@ export class RoomsController {
     @CurrentUser() user: JwtPayload,
     @CurrentRoom() room: Room,
   ) {
+    // タイマーを停止（念のため）
+    this.gameGateway.stopGameTimer(room.id);
+
     // プレイヤーの捕獲状態をリセット
     await this.playersService.resetCaptureStatus(room.id);
     

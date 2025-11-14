@@ -34,6 +34,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // ソケットIDとプレイヤー情報のマッピング
   private socketToPlayer = new Map<string, { playerId: string; roomId: string }>();
 
+  // 部屋ごとのタイマーを管理
+  private roomTimers = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly roomsService: RoomsService,
     private readonly playersService: PlayersService,
@@ -150,5 +153,110 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (error) {
       this.logger.error(`Failed to send game status: ${error.message}`);
     }
+  }
+
+  /**
+   * ゲームタイマーを開始
+   */
+  async startGameTimer(roomId: string) {
+    this.logger.log(`[startGameTimer] Starting timer for room ${roomId}`);
+    
+    // 既存のタイマーをクリア
+    this.stopGameTimer(roomId);
+    
+    const room = await this.roomsService.findById(roomId);
+    if (!room || !room.startedAt) {
+      this.logger.error(`[startGameTimer] Invalid room or not started`);
+      return;
+    }
+    
+    const startTime = room.startedAt.getTime();
+    const gameDuration = room.durationSeconds;
+    const gracePeriod = room.gracePeriodSeconds;
+    const totalSeconds = gameDuration + gracePeriod;
+    
+    // 1秒ごとに実行
+    const timer = setInterval(async () => {
+      try {
+        const now = Date.now();
+        const elapsedMs = now - startTime;
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        
+        // 全体の時間を超えたか判定
+        if (elapsedSeconds >= totalSeconds) {
+          // 時間切れ
+          await this.handleTimeUp(roomId);
+          return;
+        }
+        
+        // タイマーイベントを送信
+        await this.sendTimerTick(roomId, elapsedSeconds, gameDuration, gracePeriod);
+      } catch (error) {
+        this.logger.error(`[Timer] Error in room ${roomId}: ${error.message}`);
+      }
+    }, 1000);
+    
+    this.roomTimers.set(roomId, timer);
+    this.logger.log(`[startGameTimer] Timer started for room ${roomId}`);
+  }
+
+  /**
+   * タイマーを停止
+   */
+  stopGameTimer(roomId: string) {
+    const timer = this.roomTimers.get(roomId);
+    if (timer) {
+      clearInterval(timer);
+      this.roomTimers.delete(roomId);
+      this.logger.log(`[stopGameTimer] Timer stopped for room ${roomId}`);
+    }
+  }
+
+  /**
+   * game:timerTick イベントを送信
+   * 猶予時間: ゲーム開始前に泥棒が逃げる時間
+   * ゲーム時間: 警察が泥棒を捕まえる時間
+   */
+  private async sendTimerTick(
+    roomId: string,
+    elapsedSeconds: number,
+    gameDuration: number,
+    gracePeriod: number,
+  ) {
+    const totalSeconds = gameDuration + gracePeriod;
+    const remainingSeconds = totalSeconds - elapsedSeconds;
+    
+    // 猶予時間中かどうか（ゲーム開始前）
+    const isGracePeriod = elapsedSeconds < gracePeriod;
+    
+    const payload: any = {
+      remainingSeconds,
+      elapsedSeconds,
+      totalSeconds,
+      isGracePeriod,
+    };
+    
+    // 猶予時間中の場合、猶予時間の残りを追加
+    if (isGracePeriod) {
+      payload.gracePeriodRemaining = gracePeriod - elapsedSeconds;
+    }
+    
+    this.server.to(`room:${roomId}`).emit('game:timerTick', payload);
+  }
+
+  /**
+   * 時間切れ処理
+   */
+  private async handleTimeUp(roomId: string) {
+    this.logger.log(`[handleTimeUp] Time up for room ${roomId}`);
+    
+    // タイマーを停止
+    this.stopGameTimer(roomId);
+    
+    // ゲームを終了
+    await this.roomsService.terminateGame(roomId);
+    
+    // 状態を更新
+    await this.sendGameStatus(roomId);
   }
 }
