@@ -40,20 +40,20 @@ export class RoomAuthGuard implements CanActivate {
     }
 
     // 2. Passcodeの検証
-    const passcode = this.extractPasscodeFromRequest(request);
-    if (!passcode) {
-      throw new BadRequestException('合言葉が提供されていません');
-    }
+    // const passcode = this.extractPasscodeFromRequest(request);
+    // if (!passcode) {
+    //   throw new BadRequestException('合言葉が提供されていません');
+    // }
 
     const room = await this.roomsService.findById(payload.roomId);
     if (!room) {
       throw new UnauthorizedException('部屋が見つかりません');
     }
 
-    const isPasscodeValid = await bcrypt.compare(passcode, room.passcode_hash);
-    if (!isPasscodeValid) {
-      throw new UnauthorizedException('合言葉が正しくありません');
-    }
+    // const isPasscodeValid = await bcrypt.compare(passcode, room.passcode_hash);
+    // if (!isPasscodeValid) {
+    //   throw new UnauthorizedException('合言葉が正しくありません');
+    // }
 
     // リクエストオブジェクトにユーザー情報と部屋情報を追加
     request['user'] = payload;
