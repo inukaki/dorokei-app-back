@@ -1,5 +1,7 @@
-name: dorokei-database
+name: dorokei-app
+
 services:
+  # MariaDBデータベース (dbサービス)
   db:
     container_name: dorokei-mariadb
     image: mariadb:10.11.10
@@ -11,10 +13,50 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - '${DB_PORT:-3306}:3306'
     volumes:
       - db_data:/var/lib/mysql
+    networks: # ネットワーク定義を追加
+      - dorokei-network
     restart: unless-stopped
+    # ヘルスチェックを追加 (backendサービスがDBを待つために必要)
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJSバックエンド (backendサービス) を追記
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dorokei-backend
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      # DB_HOSTはサービス名(db)を指定
+      DB_HOST: db
+      DB_PORT: 3306
+      # ... (他の環境変数は必要に応じて追加)
+    ports:
+      - '3001:3000' # ホストの3001をコンテナの3000にマッピング
+    volumes:
+      # ホットリロードのためのボリュームマウント
+      - ./src:/app/src
+      - ./typeorm.config.ts:/app/typeorm.config.ts
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy # DBが完全に起動するまで待つ
+    networks:
+      - dorokei-network
+    command: npm run start:dev
+
+# ネットワークとボリューム定義
+networks:
+  dorokei-network:
+    driver: bridge
 
 volumes:
   db_data:
