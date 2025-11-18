@@ -1,19 +1,20 @@
 name: dorokei-database
 services:
   db:
-    container_name: dorokei-mariadb
-    image: mariadb:10.11.10
-    env_file: ../.env
+    container_name: dorokei-postgres
+    image: postgres:15-alpine
+    env_file:
+      - ../.env
     environment:
       TZ: Asia/Tokyo
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-enjoy_dorokei}
+      POSTGRES_USER: ${POSTGRES_USER:-dorokei_user}
+      POSTGRES_DB: ${POSTGRES_DB:-dorokei_db}
+
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
