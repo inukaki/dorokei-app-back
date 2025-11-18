@@ -1,0 +1,63 @@
+name: dorokei-app
+
+services:
+  # MariaDBデータベース
+  db:
+    container_name: dorokei-mariadb
+    image: mariadb:10.11.10
+    env_file: .env
+    environment:
+      TZ: Asia/Tokyo
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - dorokei-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJSバックエンド
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dorokei-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      NODE_ENV: ${NODE_ENV}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE}
+    ports:
+      - "${PORT:-3001}:${PORT:-3001}"
+    volumes:
+      - ./src:/app/src
+      - ./typeorm.config.ts:/app/typeorm.config.ts
+      - ./node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dorokei-network
+    command: npm run start:dev
+
+networks:
+  dorokei-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  node_modules:

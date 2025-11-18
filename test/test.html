@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disconnect {
+            background-color: #f44336;
+        }
+        .disconnect:hover {
+            background-color: #da190b;
+        }
+        #logs {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border: 1px solid #ddd;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #ccc;
+        }
+        .log-connect { border-left-color: #4CAF50; }
+        .log-disconnect { border-left-color: #f44336; }
+        .log-send { border-left-color: #2196F3; }
+        .log-receive { border-left-color: #FF9800; }
+        .log-error { border-left-color: #f44336; background-color: #ffebee; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket (Socket.IO) テストツール</h1>
+
+    <div class="input-group">
+        <label>サーバーURL:</label>
+        <input type="text" id="serverUrl" value="http://localhost:3000/game" placeholder="http://localhost:3000/game">
+    </div>
+
+    <div class="input-group">
+        <label>プレイヤートークン (JWT):</label>
+        <textarea id="playerToken" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+    </div>
+
+    <div class="input-group">
+        <button onclick="connect()">接続</button>
+        <button class="disconnect" onclick="disconnect()">切断</button>
+        <button onclick="sendReconnect()">player:reconnect 送信</button>
+        <button onclick="clearLogs()">ログクリア</button>
+    </div>
+
+    <h2>📋 ログ</h2>
+    <div id="logs"></div>
+
+    <script>
+        let socket = null;
+
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            
+            if (socket) {
+                addLog('既に接続されています', 'error');
+                return;
+            }
+
+            addLog(`接続中: ${serverUrl}`, 'connect');
+
+            socket = io(serverUrl, {
+                transports: ['websocket'],
+                reconnection: false
+            });
+
+            socket.on('connect', () => {
+                addLog(`✅ 接続成功: ${socket.id}`, 'connect');
+            });
+
+            socket.on('disconnect', (reason) => {
+                addLog(`❌ 切断: ${reason}`, 'disconnect');
+                socket = null;
+            });
+
+            socket.on('connect_error', (error) => {
+                addLog(`❌ 接続エラー: ${error.message}`, 'error');
+                socket = null;
+            });
+
+            // game:statusUpdated イベントを受信
+            socket.on('game:statusUpdated', (data) => {
+                addLog(`📨 game:statusUpdated 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // game:timerTick イベントを受信
+            socket.on('game:timerTick', (data) => {
+                addLog(`⏰ game:timerTick 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:capturedNotification イベントを受信
+            socket.on('player:capturedNotification', (data) => {
+                addLog(`🚨 player:capturedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:releasedNotification イベントを受信
+            socket.on('player:releasedNotification', (data) => {
+                addLog(`🆓 player:releasedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // game:terminatedNotification イベントを受信
+            socket.on('game:terminatedNotification', (data) => {
+                addLog(`🏁 game:terminatedNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // player:leftNotification イベントを受信
+            socket.on('player:leftNotification', (data) => {
+                addLog(`👋 player:leftNotification 受信:`, 'receive');
+                addLog(JSON.stringify(data, null, 2), 'receive');
+            });
+
+            // エラーイベントを受信
+            socket.on('error', (error) => {
+                addLog(`❌ エラー: ${JSON.stringify(error)}`, 'error');
+            });
+
+            // 汎用イベントリスナー（デバッグ用）
+            socket.onAny((eventName, ...args) => {
+                const knownEvents = [
+                    'game:statusUpdated',
+                    'game:timerTick',
+                    'player:capturedNotification',
+                    'player:releasedNotification',
+                    'game:terminatedNotification',
+                    'player:leftNotification',
+                ];
+                if (!knownEvents.includes(eventName)) {
+                    addLog(`📨 ${eventName}: ${JSON.stringify(args)}`, 'receive');
+                }
+            });
+        }
+
+        function disconnect() {
+            if (!socket) {
+                addLog('接続されていません', 'error');
+                return;
+            }
+
+            socket.disconnect();
+            addLog('切断しました', 'disconnect');
+            socket = null;
+        }
+
+        function sendReconnect() {
+            if (!socket) {
+                addLog('先に接続してください', 'error');
+                return;
+            }
+
+            const playerToken = document.getElementById('playerToken').value.trim();
+
+            if (!playerToken) {
+                addLog('プレイヤートークンを入力してください', 'error');
+                return;
+            }
+
+            const payload = {
+                playerToken: playerToken
+            };
+
+            addLog(`📤 player:reconnect 送信:`, 'send');
+            addLog(JSON.stringify(payload, null, 2), 'send');
+
+            socket.emit('player:reconnect', payload, (response) => {
+                addLog(`📨 player:reconnect レスポンス:`, 'receive');
+                addLog(JSON.stringify(response, null, 2), 'receive');
+            });
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        // ページ読み込み時の初期化
+        window.addEventListener('load', () => {
+            addLog('WebSocketテストツール準備完了', 'info');
+        });
+    </script>
+</body>
+</html>
