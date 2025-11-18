@@ -9,7 +9,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const synchronizeEnabled = process.env.DB_SYNCHRONIZE === 'true';
 
 export const typeOrmConfig: DataSourceOptions = {
-    type: 'mysql',
+    type: isDevelopment ? 'mysql' : 'postgres',  // 開発環境では MySQL、本番環境では PostgreSQL
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '3306', 10),
     username: process.env.MYSQL_USER,
