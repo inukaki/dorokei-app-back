@@ -15,7 +15,7 @@ export const typeOrmConfig: DataSourceOptions = {
     username: process.env.POSTGRES_USER || process.env.MYSQL_USER,
     password: process.env.POSTGRES_PASSWORD || process.env.MYSQL_PASSWORD,
     database: process.env.POSTGRES_DB || process.env.MYSQL_DATABASE,
-    synchronize: isDevelopment && synchronizeEnabled,
+    synchronize: synchronizeEnabled,
     logging: isDevelopment ? ['query', 'error'] : false,
     entities: [Room, Player],
     // entities: isDevelopment
