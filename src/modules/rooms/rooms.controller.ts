@@ -250,4 +250,51 @@ export class RoomsController {
       message: 'ルームを解散しました',
     };
   }
+
+  // 2.9 POST /rooms/leave - 部屋から退出する
+  @Post('leave')
+  @UseGuards(RoomAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async leaveRoom(
+    @CurrentUser() user: JwtPayload,
+    @CurrentRoom() room: Room,
+  ) {
+    const player = await this.playersService.findById(user.playerId);
+    
+    if (!player) {
+      throw new Error('プレイヤーが見つかりません');
+    }
+
+    // ホストが退出する場合は部屋を解散
+    if (user.isHost) {
+      // タイマーを停止
+      this.gameGateway.stopGameTimer(room.id);
+
+      // WebSocketで全プレイヤーに部屋解散を通知
+      await this.gameGateway.sendRoomDisbanded(room.id);
+
+      // 部屋を削除（CASCADE により所属プレイヤーも自動削除）
+      await this.roomsService.remove(room.id);
+
+      return {
+        message: 'ホストが退出したため、ルームを解散しました',
+        isRoomDisbanded: true,
+      };
+    }
+
+    // 一般プレイヤーの場合
+    // プレイヤーを削除
+    await this.playersService.remove(user.playerId);
+
+    // WebSocketで退出通知を送信
+    await this.gameGateway.sendPlayerLeft(room.id, player.id, player.playerName);
+
+    // WebSocketで状態を通知
+    await this.gameGateway.sendGameStatus(room.id);
+
+    return {
+      message: '部屋から退出しました',
+      isRoomDisbanded: false,
+    };
+  }
 }
