@@ -12,18 +12,34 @@ export class PlayersService {
   ) {}
 
   // プレイヤーを作成
-  create(
+  async create(
     playerName: string,
-    roomId: string,
+    roomId: string | null,
     role: PlayerRole = PlayerRole.THIEF,
   ): Promise<Player> {
-    const player = this.playerRepository.create({
+    const playerData: any = {
       playerName,
-      roomId,
       role,
       isCaptured: false,
       isConnected: true,
-    });
+    };
+    
+    if (roomId !== null) {
+      playerData.roomId = roomId;
+    }
+    
+    const player = this.playerRepository.create(playerData);
+    const saved = await this.playerRepository.save(player);
+    return Array.isArray(saved) ? saved[0] : saved;
+  }
+
+  // プレイヤーのroomIdを更新
+  async updateRoomId(playerId: string, roomId: string): Promise<Player> {
+    const player = await this.findById(playerId);
+    if (!player) {
+      throw new NotFoundException(`プレイヤーが見つかりません`);
+    }
+    player.roomId = roomId;
     return this.playerRepository.save(player);
   }
 
@@ -124,7 +140,11 @@ export class PlayersService {
     return `This action updates a #${id} player`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} player`;
+  async remove(id: string): Promise<void> {
+    const player = await this.findById(id);
+    if (!player) {
+      throw new NotFoundException(`プレイヤーが見つかりません`);
+    }
+    await this.playerRepository.remove(player);
   }
 }

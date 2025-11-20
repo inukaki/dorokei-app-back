@@ -25,10 +25,10 @@ export class Room {
     @Column({ type: 'int', default: 30 })
     gracePeriodSeconds: number;
 
-    @Column({ type: 'datetime', nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     startedAt: Date | null;
 
-    @Column({ type: 'varchar', length: 36 })
+    @Column({ type: 'uuid' })
     hostPlayerId: string;
 
     // 最大参加人数のデフォルト値を15に設定
@@ -39,13 +39,9 @@ export class Room {
     @OneToMany(() => Player, player => player.room)
     players: Player[];
 
-    // CreateDateColumnではデフォルトで
-    // DBに精度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
-    @CreateDateColumn()
+    @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
-    // UpdateDateColumnではデフォルトで
-    // DBに精度の良い型（TIMESTAMP WITH TIME ZONE 型）が使われる
-    @UpdateDateColumn()
+    @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 }

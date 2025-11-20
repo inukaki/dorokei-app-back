@@ -9,13 +9,13 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const synchronizeEnabled = process.env.DB_SYNCHRONIZE === 'true';
 
 export const typeOrmConfig: DataSourceOptions = {
-    type: 'mysql',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306', 10),
-    username: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
-    synchronize: isDevelopment && synchronizeEnabled,
+    type: 'postgres',
+    host: process.env.DB_HOST || process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || process.env.POSTGRES_PORT || '5432', 10),
+    username: process.env.POSTGRES_USER || process.env.MYSQL_USER,
+    password: process.env.POSTGRES_PASSWORD || process.env.MYSQL_PASSWORD,
+    database: process.env.POSTGRES_DB || process.env.MYSQL_DATABASE,
+    synchronize: synchronizeEnabled,
     logging: isDevelopment ? ['query', 'error'] : false,
     entities: [Room, Player],
     // entities: isDevelopment

@@ -16,7 +16,7 @@ export class GameService {
     private readonly playersService: PlayersService,
     private readonly jwtService: JwtService,
   ) {}
-  // POST /rooms 部屋を作成（ホストも同時に作成）
+  // POST /rooms 部屋を作成(ホストも同時に作成)
   async createRoomWithHost(dto: CreateRoomDto) {
     const { playerName, passcode } = dto;
 
@@ -30,19 +30,19 @@ export class GameService {
       }
     }
 
-    // 仮のホストIDで部屋を作成
-    const tempHostId = 'temp-' + Date.now();
-    const room = await this.roomsService.create(passcodeHash, tempHostId);
+    // まず仮の部屋なしでホストプレイヤーを作成（roomId は null）
+    const hostPlayer = await this.playersService.create(
+      playerName, 
+      null, // roomId は後で設定
+      PlayerRole.POLICE
+    );
 
     try {
-      const hostPlayer = await this.playersService.create(
-        playerName, 
-        room.id, 
-        PlayerRole.POLICE
-      );
+      // 実際のホストIDで部屋を作成
+      const room = await this.roomsService.create(passcodeHash, hostPlayer.id);
 
-      // ホストプレイヤーIDを設定して部屋の情報を更新
-      await this.roomsService.updateHostPlayerId(room.id, hostPlayer.id);
+      // プレイヤーのroomIdを更新
+      await this.playersService.updateRoomId(hostPlayer.id, room.id);
 
       const playerToken = this.jwtService.sign({
         playerId: hostPlayer.id,
@@ -57,8 +57,8 @@ export class GameService {
         roomId: room.id,
       };
     } catch (error) {
-      // ホストプレイヤーの作成に失敗した場合、作成した部屋を削除
-      await this.roomsService.remove(room.id);
+      // 部屋の作成に失敗した場合、作成したプレイヤーを削除
+      await this.playersService.remove(hostPlayer.id);
       throw error;
     }
   }

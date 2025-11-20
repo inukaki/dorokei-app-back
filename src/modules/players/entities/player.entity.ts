@@ -26,12 +26,12 @@ export class Player {
     @ManyToOne(() => Room, room => room.players, { onDelete: 'CASCADE' })
     room: Room;
 
-    @Column({ type: 'varchar', length: 36 })
-    roomId: string;
+    @Column({ type: 'uuid', nullable: true })
+    roomId?: string | null;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 }
