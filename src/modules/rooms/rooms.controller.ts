@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -225,6 +226,28 @@ export class RoomsController {
         status: resetRoom.status,
         startedAt: resetRoom.startedAt,
       },
+    };
+  }
+
+  // 2.8 DELETE /rooms - ルームを解散する（ホスト専用）
+  @Delete()
+  @UseGuards(RoomAuthGuard, HostGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteRoom(
+    @CurrentUser() user: JwtPayload,
+    @CurrentRoom() room: Room,
+  ) {
+    // タイマーを停止
+    this.gameGateway.stopGameTimer(room.id);
+
+    // WebSocketで全プレイヤーに部屋解散を通知
+    await this.gameGateway.sendRoomDisbanded(room.id);
+
+    // 部屋を削除（CASCADE により所属プレイヤーも自動削除）
+    await this.roomsService.remove(room.id);
+
+    return {
+      message: 'ルームを解散しました',
     };
   }
 }
