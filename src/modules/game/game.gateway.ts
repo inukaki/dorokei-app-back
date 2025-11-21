@@ -348,4 +348,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date().toISOString(),
     });
   }
+
+  /**
+   * ルーム解散通知を送信
+   */
+  async sendRoomDisbanded(roomId: string) {
+    this.logger.log(`[sendRoomDisbanded] Sending disbanded notification for room ${roomId}`);
+    
+    this.server.to(`room:${roomId}`).emit('room:disbanded', {
+      message: 'ホストによりルームが解散されました',
+      timestamp: new Date().toISOString(),
+    });
+
+    // 全クライアントをルームから退出させる
+    const sockets = await this.server.in(`room:${roomId}`).fetchSockets();
+    for (const socket of sockets) {
+      socket.leave(`room:${roomId}`);
+    }
+    
+    this.logger.log(`[sendRoomDisbanded] All clients removed from room ${roomId}`);
+  }
 }

@@ -1,26 +1,25 @@
 name: dorokei-app
 
 services:
-  # MariaDBデータベース
+  # PostgreSQLデータベース
   db:
-    container_name: dorokei-mariadb
-    image: mariadb:10.11.10
+    container_name: dorokei-postgres
+    image: postgres:15-alpine
     env_file: .env
     environment:
       TZ: Asia/Tokyo
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     networks:
       - dorokei-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,10 +34,10 @@ services:
     env_file: .env
     environment:
       DB_HOST: db
-      DB_PORT: 3306
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      DB_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       NODE_ENV: ${NODE_ENV}
       DB_SYNCHRONIZE: ${DB_SYNCHRONIZE}
     ports:
@@ -46,7 +45,8 @@ services:
     volumes:
       - ./src:/app/src
       - ./typeorm.config.ts:/app/typeorm.config.ts
-      - ./node_modules:/app/node_modules
+      # node_modulesはコンテナ内のものを使用
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy
@@ -60,4 +60,3 @@ networks:
 
 volumes:
   db_data:
-  node_modules:

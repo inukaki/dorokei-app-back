@@ -49,7 +49,11 @@ export class RoomsService {
 
   // 部屋を削除
   async remove(id: string): Promise<void> {
-    await this.roomRepository.delete(id);
+    const room = await this.findById(id);
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${id} not found`);
+    }
+    await this.roomRepository.remove(room);
   }
 
   findAll(): Promise<Room[]> {
