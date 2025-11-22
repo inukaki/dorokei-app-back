@@ -9,7 +9,7 @@ import { Request } from 'express';
 
 /**
  * JWT認証ガード
- * Authorizationヘッダーからトークンを検証し、リクエストにユーザー情報を追加する
+ * X-Player-Tokenヘッダーからトークンを検証し、リクエストにユーザー情報を追加する
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -38,7 +38,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    // X-Player-Tokenヘッダーからトークンを取得
+    return request.headers['Playertoken'] as string | undefined;
   }
 }
