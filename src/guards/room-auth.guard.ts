@@ -23,6 +23,8 @@ export class RoomAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+    console.log('AuthGuard: Checking authentication for request to', request.headers);
+    
     
     // 1. JWTトークンの検証
     const token = this.extractTokenFromHeader(request);
@@ -64,7 +66,7 @@ export class RoomAuthGuard implements CanActivate {
 
   private extractTokenFromHeader(request: Request): string | undefined {
     // X-Player-Tokenヘッダーからトークンを取得
-    return request.headers['Playertoken'] as string | undefined;
+    return request.get('Playertoken') as string | undefined;
   }
 
   private extractPasscodeFromRequest(request: Request): string | undefined {
