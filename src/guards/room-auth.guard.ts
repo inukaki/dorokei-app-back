@@ -63,14 +63,14 @@ export class RoomAuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    // X-Player-Tokenヘッダーからトークンを取得
+    return request.headers['Playertoken'] as string | undefined;
   }
 
   private extractPasscodeFromRequest(request: Request): string | undefined {
     // ヘッダー、クエリパラメータ、ボディから合言葉を取得
     return (
-      request.headers['x-room-passcode'] as string ||
+      request.headers['X-Room-Passcode'] as string ||
       request.query.passcode as string ||
       request.body?.passcode
     );
